@@ -5,9 +5,14 @@ using UnityEngine;
 public class ObjectPlacer : MonoBehaviour
 {
     [SerializeField] GameObject _previewObject = null;
-    [SerializeField] GameObject _placeObject = null;
+
     [SerializeField] LayerMask _interactableMask;
     [SerializeField] LayerMask _placeableMask;
+
+
+    [SerializeField] GameObject _fullWall = null;
+    [SerializeField] GameObject _halfWall = null;
+    GameObject _placeObject = null;
 
     GameObject _placerPreview = null;
 
@@ -23,11 +28,22 @@ public class ObjectPlacer : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            _placeObject = _fullWall;
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            _placeObject = _halfWall;
+        }
+
         SnapPreviewToGrid();
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (!Physics.CheckBox(_currentPoint, Vector3.one / 3, Quaternion.identity))
+            Vector3 _buildPoint = _currentPoint;
+            _buildPoint.y += 0.5f;
+            if (!Physics.CheckBox(_buildPoint, Vector3.one / 3, Quaternion.identity))
                 Instantiate(_placeObject, _currentPoint, Quaternion.identity, transform);
         }
         else if (Input.GetMouseButtonDown(1))
@@ -60,7 +76,7 @@ public class ObjectPlacer : MonoBehaviour
             else _placerPreview.SetActive(true);
 
             _currentPoint.x = Mathf.Round(_currentPoint.x);
-            _currentPoint.y = 0.5f;
+            _currentPoint.y = 0.0f;
             _currentPoint.z = Mathf.Round(_currentPoint.z);
 
             _placerPreview.transform.position = _currentPoint;
