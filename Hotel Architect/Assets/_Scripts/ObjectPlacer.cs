@@ -41,11 +41,62 @@ public class ObjectPlacer : MonoBehaviour
 
         _meshRenderer = _placerPreview.GetComponentInChildren<MeshRenderer>();
 
-
         //Sets placeable to the full wall by default
         ChangeObject(_fullWall);
 
         _mainCam = Camera.main;
+    }
+
+    private void Update()
+    {
+        InteractWithKeyboard();
+
+        SnapPreviewToGrid();
+
+        InteractWithMouse();
+    }
+
+    private void InteractWithKeyboard()
+    {
+        //Sets the placeable that can be put down
+        if (Input.GetKeyDown(KeyCode.Alpha1)) ChangeObject(_fullWall);
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) ChangeObject(_halfWall);
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) ChangeObject(_sofa);
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) ChangeObject(_largeSofa);
+
+        //Rotates the placeable
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            _isRotatated = !_isRotatated;
+            HandlePreviewRotations();
+        }
+    }
+
+    void SnapPreviewToGrid()
+    {
+        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+        {
+            _currentPoint = hit.point;
+
+            if (hit.transform.gameObject.layer == _placeableLayerNum)
+            {
+                _currentPoint += hit.normal / 2;
+                _placerPreview.SetActive(false);
+            }
+            else _placerPreview.SetActive(true);
+
+            _currentPoint = _currentPoint.Round();
+            _currentPoint.y = 0.0f;
+
+            //Offsets objects slightly based on how large they are.
+            if (_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
+
+            _placerPreview.transform.position = _currentPoint;
+        }
+        else _placerPreview.SetActive(false);
     }
 
     private void InteractWithMouse()
@@ -54,9 +105,8 @@ public class ObjectPlacer : MonoBehaviour
         _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
 
         Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
-        extents.x -= 0.02f;
-        extents.y -= 0.02f;
-        extents.z -= 0.02f;
+        extents = extents.Subtract(0.02f);
+        
 
         if (_isRotatated)
         {
@@ -79,83 +129,20 @@ public class ObjectPlacer : MonoBehaviour
                 Instantiate(_placeObject, _buildPoint, objectRotation, transform);
             }
         }
-        else
-        {
-            _meshRenderer.material = _invalidPlacement;
-        }
+        else _meshRenderer.material = _invalidPlacement;
 
 
         if (Input.GetMouseButtonDown(1))
         {
             RaycastHit hit;
             Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
-            {
-                Destroy(hit.transform.gameObject);
-            }
+            if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask)) Destroy(hit.transform.gameObject);
         }
     }
-
     private void HandlePreviewRotations()
     {
         if (_isRotatated) _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
         else _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
-    }
-
-    private void InteractWithKeyboard()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) ChangeObject(_fullWall);
-        else if (Input.GetKeyDown(KeyCode.Alpha2)) ChangeObject(_halfWall);
-        else if (Input.GetKeyDown(KeyCode.Alpha3)) ChangeObject(_sofa);
-        else if (Input.GetKeyDown(KeyCode.Alpha4)) ChangeObject(_largeSofa);
-
-        if (Input.GetKeyDown(KeyCode.X))
-        {
-            _isRotatated = !_isRotatated;
-            HandlePreviewRotations();
-        }
-    }
-
-    private void Update()
-    {
-        InteractWithKeyboard();
-
-        SnapPreviewToGrid();
-
-        InteractWithMouse();
-    }
-
-    void SnapPreviewToGrid()
-    {
-        Vector2 screenPos = Input.mousePosition;
-
-        Ray ray = _mainCam.ScreenPointToRay(screenPos);
-
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
-        {
-            _currentPoint = hit.point;
-
-            if (hit.transform.gameObject.layer == _placeableLayerNum)
-            {
-                _currentPoint += hit.normal / 2;
-                _placerPreview.SetActive(false);
-            }
-            else _placerPreview.SetActive(true);
-
-            _currentPoint.x = Mathf.Round(_currentPoint.x);
-            _currentPoint.y = 0.0f;
-            _currentPoint.z = Mathf.Round(_currentPoint.z);
-
-            //Offsets objects slightly based on how large they are.
-            if (_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
-
-            _placerPreview.transform.position = _currentPoint;
-        }
-        else
-        {
-            _placerPreview.SetActive(false);
-        }
     }
 
     public void ChangeObject(PlacableObject newObject)
