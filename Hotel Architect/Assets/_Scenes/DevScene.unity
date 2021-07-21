@@ -413,8 +413,8 @@ MonoBehaviour:
   _placeableMask:
     serializedVersion: 2
     m_Bits: 128
-  _fullWall: {fileID: 6906382662711264411, guid: 83c3734da2f8f6c459fd4155fb76be53, type: 3}
-  _halfWall: {fileID: 6906382662711264411, guid: 00e6a8debcfa0eb4aa9d18d40280e7ca, type: 3}
+  _fullWall: {fileID: 9117057164800068141, guid: 83c3734da2f8f6c459fd4155fb76be53, type: 3}
+  _halfWall: {fileID: -6309288745717765650, guid: 00e6a8debcfa0eb4aa9d18d40280e7ca, type: 3}
 --- !u!1 &1104481023
 GameObject:
   m_ObjectHideFlags: 0

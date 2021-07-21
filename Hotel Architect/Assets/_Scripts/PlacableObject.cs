@@ -4,15 +4,8 @@ using UnityEngine;
 
 public class PlacableObject : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [SerializeField] public PlacableConfig _config;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
+
 }

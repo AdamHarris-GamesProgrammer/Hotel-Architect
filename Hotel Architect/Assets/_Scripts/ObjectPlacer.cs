@@ -10,9 +10,9 @@ public class ObjectPlacer : MonoBehaviour
     [SerializeField] LayerMask _placeableMask;
 
 
-    [SerializeField] GameObject _fullWall = null;
-    [SerializeField] GameObject _halfWall = null;
-    GameObject _placeObject = null;
+    [SerializeField] PlacableObject _fullWall = null;
+    [SerializeField] PlacableObject _halfWall = null;
+    PlacableObject _placeObject = null;
 
     GameObject _placerPreview = null;
 
@@ -24,6 +24,9 @@ public class ObjectPlacer : MonoBehaviour
     {
         _placerPreview = Instantiate(_previewObject, Vector3.zero, Quaternion.identity, transform);
         _placeableLayerNum = LayerMask.NameToLayer("Placeable");
+
+        //Sets placable to the full wall by default
+        _placeObject = _fullWall;
     }
 
     private void Update()
@@ -42,9 +45,11 @@ public class ObjectPlacer : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 _buildPoint = _currentPoint;
-            _buildPoint.y += 0.5f;
+            _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+
+            //Check that there isnt an object occupying this space.
             if (!Physics.CheckBox(_buildPoint, Vector3.one / 3, Quaternion.identity))
-                Instantiate(_placeObject, _currentPoint, Quaternion.identity, transform);
+                Instantiate(_placeObject, _buildPoint, Quaternion.identity, transform);
         }
         else if (Input.GetMouseButtonDown(1))
         {
