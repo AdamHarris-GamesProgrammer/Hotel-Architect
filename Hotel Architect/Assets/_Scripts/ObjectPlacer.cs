@@ -51,6 +51,12 @@ public class ObjectPlacer : MonoBehaviour
             extents.y -= 0.02f;
             extents.z -= 0.02f;
 
+            if(_isRotatated) {
+                float temp = extents.x;
+                extents.x = extents.z;
+                extents.z = temp;
+            }
+
             
 
             //Check that there isnt an object occupying this space.
@@ -74,6 +80,12 @@ public class ObjectPlacer : MonoBehaviour
         }
     }
 
+    private void HandlePreviewRotations()
+    {
+        if (_isRotatated) _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+        else _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
+    }
+
     private void InteractWithKeyboard()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1)) ChangeObject(_fullWall);
@@ -84,9 +96,7 @@ public class ObjectPlacer : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.X))
         {
             _isRotatated = !_isRotatated;
-
-            if (_isRotatated) _placerPreview.transform.Rotate(new Vector3(0.0f, 90.0f, 0.0f));
-            else _placerPreview.transform.Rotate(new Vector3(0.0f, -90.0f, 0.0f));
+            HandlePreviewRotations();
         }
     }
 
@@ -137,6 +147,6 @@ public class ObjectPlacer : MonoBehaviour
         _placeObject = newObject;
         _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
         _isRotatated = false;
-        if (_isRotatated) _placerPreview.transform.Rotate(new Vector3(0.0f, -90.0f, 0.0f));
+        HandlePreviewRotations();
     }
 }
