@@ -90,6 +90,11 @@ public class ObjectPlacer : MonoBehaviour
             _currentPoint.y = 0.0f;
             _currentPoint.z = Mathf.Round(_currentPoint.z);
 
+            if(_placeObject._config._sizeInMetres.x > 1.0f)
+            {
+                _currentPoint.x -= 0.5f;
+            }
+
             _placerPreview.transform.position = _currentPoint;
         }
         else
