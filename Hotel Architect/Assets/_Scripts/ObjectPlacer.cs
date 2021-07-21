@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class ObjectPlacer : MonoBehaviour
@@ -30,8 +31,8 @@ public class ObjectPlacer : MonoBehaviour
         _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
         _placeableLayerNum = LayerMask.NameToLayer("Placeable");
 
-        //Sets placable to the full wall by default
-        _placeObject = _fullWall;
+        //Sets placeable to the full wall by default
+        ChangeObject(_fullWall);
 
         _mainCam = Camera.main;
     }
@@ -46,13 +47,20 @@ public class ObjectPlacer : MonoBehaviour
 
         SnapPreviewToGrid();
 
+
+        Vector3 _buildPoint = _currentPoint;
+        _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+
+        Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
+        extents.x -= 0.02f;
+        extents.y -= 0.02f;
+        extents.z -= 0.02f;
+        //Vector3 extents = Vector3.one / 3.0f;
+
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 _buildPoint = _currentPoint;
-            _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
-
             //Check that there isnt an object occupying this space.
-            if (!Physics.CheckBox(_buildPoint, Vector3.one / 3, Quaternion.identity))
+            if (!Physics.CheckBox(_buildPoint, extents))
                 Instantiate(_placeObject, _buildPoint, Quaternion.identity, transform);
         }
         else if (Input.GetMouseButtonDown(1))
