@@ -10,7 +10,12 @@ public class ObjectPlacer : MonoBehaviour
     [SerializeField] LayerMask _interactableMask;
     [SerializeField] LayerMask _placeableMask;
 
+    [SerializeField] Material _invalidPlacement = null;
+    [SerializeField] Material _validPlacement = null;
+    MeshRenderer _meshRenderer;
 
+
+    [Header("Objects (TESTING PURPOSE ONLY)")]
     [SerializeField] PlacableObject _fullWall = null;
     [SerializeField] PlacableObject _halfWall = null;
     [SerializeField] PlacableObject _sofa = null;
@@ -27,11 +32,15 @@ public class ObjectPlacer : MonoBehaviour
     Camera _mainCam;
 
     bool _isRotatated = false;
+    bool _canBuild = false;
 
     void Awake()
     {
         _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
         _placeableLayerNum = LayerMask.NameToLayer("Placeable");
+
+        _meshRenderer = _placerPreview.GetComponentInChildren<MeshRenderer>();
+
 
         //Sets placeable to the full wall by default
         ChangeObject(_fullWall);
@@ -41,35 +50,42 @@ public class ObjectPlacer : MonoBehaviour
 
     private void InteractWithMouse()
     {
-        if (Input.GetMouseButtonDown(0))
+        Vector3 _buildPoint = _currentPoint;
+        _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+
+        Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
+        extents.x -= 0.02f;
+        extents.y -= 0.02f;
+        extents.z -= 0.02f;
+
+        if (_isRotatated)
         {
-            Vector3 _buildPoint = _currentPoint;
-            _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+            float temp = extents.x;
+            extents.x = extents.z;
+            extents.z = temp;
+        }
 
-            Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
-            extents.x -= 0.02f;
-            extents.y -= 0.02f;
-            extents.z -= 0.02f;
+        _canBuild = !Physics.CheckBox(_buildPoint, extents);
 
-            if(_isRotatated) {
-                float temp = extents.x;
-                extents.x = extents.z;
-                extents.z = temp;
-            }
+        if (_canBuild)
+        {
+            _meshRenderer.material = _validPlacement;
 
-            
-
-            //Check that there isnt an object occupying this space.
-            if (!Physics.CheckBox(_buildPoint, extents))
+            if (Input.GetMouseButtonDown(0))
             {
                 Quaternion objectRotation = Quaternion.identity;
                 if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
 
                 Instantiate(_placeObject, _buildPoint, objectRotation, transform);
             }
-                
         }
-        else if (Input.GetMouseButtonDown(1))
+        else
+        {
+            _meshRenderer.material = _invalidPlacement;
+        }
+
+
+        if (Input.GetMouseButtonDown(1))
         {
             RaycastHit hit;
             Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
@@ -132,7 +148,7 @@ public class ObjectPlacer : MonoBehaviour
             _currentPoint.z = Mathf.Round(_currentPoint.z);
 
             //Offsets objects slightly based on how large they are.
-            if(_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
+            if (_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
 
             _placerPreview.transform.position = _currentPoint;
         }
