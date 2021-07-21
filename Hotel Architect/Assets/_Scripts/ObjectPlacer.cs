@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ObjectPlacer : MonoBehaviour
 {
-    [SerializeField] GameObject _previewObject = null;
+    [SerializeField] GameObject _previewPrefab = null;
 
     [SerializeField] LayerMask _interactableMask;
     [SerializeField] LayerMask _placeableMask;
@@ -12,6 +12,7 @@ public class ObjectPlacer : MonoBehaviour
 
     [SerializeField] PlacableObject _fullWall = null;
     [SerializeField] PlacableObject _halfWall = null;
+    [SerializeField] PlacableObject _sofa = null;
     PlacableObject _placeObject = null;
 
     GameObject _placerPreview = null;
@@ -22,7 +23,7 @@ public class ObjectPlacer : MonoBehaviour
 
     void Awake()
     {
-        _placerPreview = Instantiate(_previewObject, Vector3.zero, Quaternion.identity, transform);
+        _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
         _placeableLayerNum = LayerMask.NameToLayer("Placeable");
 
         //Sets placable to the full wall by default
@@ -39,6 +40,11 @@ public class ObjectPlacer : MonoBehaviour
         {
             _placeObject = _halfWall;
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            _placeObject = _sofa;
+        }
+        _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
 
         SnapPreviewToGrid();
 
