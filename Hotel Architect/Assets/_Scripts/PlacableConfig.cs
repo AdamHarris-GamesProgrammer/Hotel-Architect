@@ -6,4 +6,5 @@ using UnityEngine;
 public class PlacableConfig : ScriptableObject
 {
     [SerializeField] public Vector3 _sizeInMetres = Vector3.one;
+    [SerializeField] public bool _canRotate = true;
 }

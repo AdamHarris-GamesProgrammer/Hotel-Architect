@@ -26,6 +26,8 @@ public class ObjectPlacer : MonoBehaviour
 
     Camera _mainCam;
 
+    bool _isRotatated = false;
+
     void Awake()
     {
         _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
@@ -44,6 +46,13 @@ public class ObjectPlacer : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha3)) ChangeObject(_sofa);
         else if (Input.GetKeyDown(KeyCode.Alpha4)) ChangeObject(_largeSofa);
         
+        if(Input.GetKeyDown(KeyCode.X))
+        {
+            _isRotatated = !_isRotatated;
+
+            if (_isRotatated) _placerPreview.transform.Rotate(new Vector3(0.0f, 90.0f, 0.0f));
+            else _placerPreview.transform.Rotate(new Vector3(0.0f, -90.0f, 0.0f));
+        }
 
         SnapPreviewToGrid();
 
@@ -111,5 +120,7 @@ public class ObjectPlacer : MonoBehaviour
     {
         _placeObject = newObject;
         _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
+        _isRotatated = false;
+        if (_isRotatated) _placerPreview.transform.Rotate(new Vector3(0.0f, -90.0f, 0.0f));
     }
 }
