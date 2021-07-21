@@ -13,6 +13,8 @@ public class ObjectPlacer : MonoBehaviour
     [SerializeField] PlacableObject _fullWall = null;
     [SerializeField] PlacableObject _halfWall = null;
     [SerializeField] PlacableObject _sofa = null;
+    [SerializeField] PlacableObject _largeSofa = null;
+
     PlacableObject _placeObject = null;
 
     GameObject _placerPreview = null;
@@ -21,6 +23,8 @@ public class ObjectPlacer : MonoBehaviour
 
     Vector3 _currentPoint;
 
+    Camera _mainCam;
+
     void Awake()
     {
         _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
@@ -28,23 +32,17 @@ public class ObjectPlacer : MonoBehaviour
 
         //Sets placable to the full wall by default
         _placeObject = _fullWall;
+
+        _mainCam = Camera.main;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            _placeObject = _fullWall;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            _placeObject = _halfWall;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            _placeObject = _sofa;
-        }
-        _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
+        if (Input.GetKeyDown(KeyCode.Alpha1)) ChangeObject(_fullWall);
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) ChangeObject(_halfWall);
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) ChangeObject(_sofa);
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) ChangeObject(_largeSofa);
+        
 
         SnapPreviewToGrid();
 
@@ -60,7 +58,7 @@ public class ObjectPlacer : MonoBehaviour
         else if (Input.GetMouseButtonDown(1))
         {
             RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
             {
                 Destroy(hit.transform.gameObject);
@@ -72,7 +70,7 @@ public class ObjectPlacer : MonoBehaviour
     {
         Vector2 screenPos = Input.mousePosition;
 
-        Ray ray = Camera.main.ScreenPointToRay(screenPos);
+        Ray ray = _mainCam.ScreenPointToRay(screenPos);
 
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
@@ -90,10 +88,8 @@ public class ObjectPlacer : MonoBehaviour
             _currentPoint.y = 0.0f;
             _currentPoint.z = Mathf.Round(_currentPoint.z);
 
-            if(_placeObject._config._sizeInMetres.x > 1.0f)
-            {
-                _currentPoint.x -= 0.5f;
-            }
+            //Offsets objects slightly based on how large they are.
+            if(_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
 
             _placerPreview.transform.position = _currentPoint;
         }
@@ -101,5 +97,11 @@ public class ObjectPlacer : MonoBehaviour
         {
             _placerPreview.SetActive(false);
         }
+    }
+
+    public void ChangeObject(PlacableObject newObject)
+    {
+        _placeObject = newObject;
+        _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
     }
 }
