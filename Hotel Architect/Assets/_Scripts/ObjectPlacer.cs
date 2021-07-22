@@ -34,6 +34,8 @@ public class ObjectPlacer : MonoBehaviour
     bool _isRotatated = false;
     bool _canBuild = false;
 
+    NodeGrid _nodeGrid;
+
     void Awake()
     {
         _placerPreview = Instantiate(_previewPrefab, Vector3.zero, Quaternion.identity, transform);
@@ -41,10 +43,14 @@ public class ObjectPlacer : MonoBehaviour
 
         _meshRenderer = _placerPreview.GetComponentInChildren<MeshRenderer>();
 
+        _nodeGrid = FindObjectOfType<NodeGrid>();
+
         //Sets placeable to the full wall by default
         ChangeObject(_fullWall);
 
         _mainCam = Camera.main;
+
+        
     }
 
     private void Update()
@@ -67,27 +73,29 @@ public class ObjectPlacer : MonoBehaviour
         //Rotates the placeable
         if (Input.GetKeyDown(KeyCode.X))
         {
+            //Toggles the rotated bool
             _isRotatated = !_isRotatated;
+            //Handles the rotation of the preview object
             HandlePreviewRotations();
         }
     }
 
     void SnapPreviewToGrid()
     {
+        //Gets a ray from the camera to the screen based on mouse position
         Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
 
         RaycastHit hit;
+        //Casts from mouse point to world
         if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
         {
             _currentPoint = hit.point;
 
-            if (hit.transform.gameObject.layer == _placeableLayerNum)
-            {
-                _currentPoint += hit.normal / 2;
-                _placerPreview.SetActive(false);
-            }
+            //If the object we are hitting is a placed item, then add a slight offset to the contact point (allows quicker placement)
+            if (hit.transform.gameObject.layer == _placeableLayerNum) _currentPoint += hit.normal / 2;
             else _placerPreview.SetActive(true);
 
+            //Rounds th current point down
             _currentPoint = _currentPoint.Round();
             _currentPoint.y = 0.0f;
 
@@ -101,13 +109,16 @@ public class ObjectPlacer : MonoBehaviour
 
     private void InteractWithMouse()
     {
+        //Gets the build point, this is needed as some objects have offsets to them
         Vector3 _buildPoint = _currentPoint;
         _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
 
         Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
+        //Subtracts a small amount of the extents to avoid overlappint colliders
         extents = extents.Subtract(0.02f);
         
 
+        //If the object is rotated swap the extents for the X and Z axis
         if (_isRotatated)
         {
             float temp = extents.x;
@@ -115,41 +126,62 @@ public class ObjectPlacer : MonoBehaviour
             extents.z = temp;
         }
 
+        //we can build if there is no collision
         _canBuild = !Physics.CheckBox(_buildPoint, extents);
 
         if (_canBuild)
         {
+            //Sets the material of the placer preview
             _meshRenderer.material = _validPlacement;
 
+            //If we LMB click 
             if (Input.GetMouseButtonDown(0))
             {
+                //Store the rotation and set it to be y:90 if we are rotating the object 
                 Quaternion objectRotation = Quaternion.identity;
                 if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
 
+                //Instantiates the object we are building
                 Instantiate(_placeObject, _buildPoint, objectRotation, transform);
+                //Sets the node as non walkable
+                _nodeGrid.GetNodeFromPosition(_buildPoint)._walkable = false;
             }
         }
+        //if we cannot build then set the placer previews material to red.
         else _meshRenderer.material = _invalidPlacement;
 
-
+        //if the RMB is clicked
         if (Input.GetMouseButtonDown(1))
         {
+            //Perform a raycast from the mouse position to the the ground 
             RaycastHit hit;
             Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask)) Destroy(hit.transform.gameObject);
+            if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
+            {
+                //Destroy the object at that point
+                Destroy(hit.transform.gameObject);
+                //Sets that node to be walkable. 
+                _nodeGrid.GetNodeFromPosition(hit.transform.position)._walkable = true;
+            }
+            
         }
     }
     private void HandlePreviewRotations()
     {
+        //Rotates on y by 90 degrees
         if (_isRotatated) _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
         else _placerPreview.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
     }
 
     public void ChangeObject(PlacableObject newObject)
     {
+        //Sets the new object
         _placeObject = newObject;
+        //Sets the previews scale 
         _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
+        //No longer rotating
         _isRotatated = false;
+        //Rotate the preview back. 
         HandlePreviewRotations();
     }
 }
