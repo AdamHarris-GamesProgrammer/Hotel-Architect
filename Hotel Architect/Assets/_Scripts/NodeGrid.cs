@@ -15,11 +15,15 @@ public class NodeGrid : MonoBehaviour
     int _gridSizeX;
     int _gridSizeY;
 
+    public List<Node> path;
+
     private void Start()
     {
         _nodeDiamater = _nodeRadius * 2;
         _gridSizeX = Mathf.RoundToInt(_gridWorldSize.x / _nodeDiamater);
         _gridSizeY = Mathf.RoundToInt(_gridWorldSize.y / _nodeDiamater);
+
+        path = new List<Node>();
 
         CreateGrid();
     }
@@ -38,7 +42,7 @@ public class NodeGrid : MonoBehaviour
 
                 bool walkable = !(Physics.CheckSphere(worldPoint, _nodeRadius, _unwalkableMask));
 
-                _nodes[x, y] = new Node(walkable, worldPoint);
+                _nodes[x, y] = new Node(walkable, worldPoint, x, y);
             }
         }
     }
@@ -69,8 +73,32 @@ public class NodeGrid : MonoBehaviour
             foreach(Node n in _nodes)
             {
                 Gizmos.color = (n._walkable) ? Color.white : Color.red;
+                if (path != null && path.Contains(n)) Gizmos.color = Color.green;
                 Gizmos.DrawCube(n._nodeWorldPosition, Vector3.one * (_nodeDiamater - 0.1f));
             }
         }
+    }
+
+    public List<Node> GetNeighbours(Node node)
+    {
+        List<Node> neighbours = new List<Node>();
+
+        for(int x = -1; x <= 1; x++)
+        {
+            for(int y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0) continue;
+
+                int checkX = node.gridX + x;
+                int checkY = node.gridY + y;
+
+                if(checkX >= 0 && checkX < _gridSizeX && checkY >= 0 && checkY < _gridSizeY)
+                {
+                    neighbours.Add(_nodes[checkX, checkY]);
+                } 
+            }
+        }
+
+        return neighbours;
     }
 }
