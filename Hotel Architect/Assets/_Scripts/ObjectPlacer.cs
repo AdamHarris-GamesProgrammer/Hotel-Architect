@@ -49,8 +49,6 @@ public class ObjectPlacer : MonoBehaviour
         ChangeObject(_fullWall);
 
         _mainCam = Camera.main;
-
-
     }
 
     private void Update()
@@ -100,7 +98,25 @@ public class ObjectPlacer : MonoBehaviour
             _currentPoint.y = 0.0f;
 
             //Offsets objects slightly based on how large they are.
-            if (_placeObject._config._sizeInMetres.x % 2 == 0) _currentPoint.x -= 0.5f;
+            if (_placeObject._config._sizeInMetres.x % 2 == 0)
+            {
+                //_currentPoint.x -= 1.0f;
+                _currentPoint.z -= 0.5f;
+
+                if(_isRotatated)
+                {
+                    //_currentPoint.x -= 1.0f;
+                }
+                else
+                {
+                    _currentPoint.x += 0.5f;
+                    _currentPoint.z -= 0.5f;
+                }
+            } 
+            else
+            {
+
+            }
 
             _placerPreview.transform.position = _currentPoint;
         }
@@ -213,7 +229,6 @@ public class ObjectPlacer : MonoBehaviour
                     _nodeGrid.GetNodeFromPosition(new Vector3(pos.x + 1.0f, pos.y, pos.z))._walkable = toggle;
                 }
             }
-
         }
     }
 
