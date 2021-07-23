@@ -7,6 +7,9 @@ public class NodeGrid : MonoBehaviour
 {
     public LayerMask _unwalkableMask;
 
+
+    public bool _displayGizmos = false;
+
     public Vector2 _gridWorldSize;
     Node[,] _nodes;
     public float _nodeRadius;
@@ -15,17 +18,18 @@ public class NodeGrid : MonoBehaviour
     int _gridSizeX;
     int _gridSizeY;
 
-    public List<Node> path;
-
-    private void Start()
+    private void Awake()
     {
         _nodeDiamater = _nodeRadius * 2;
         _gridSizeX = Mathf.RoundToInt(_gridWorldSize.x / _nodeDiamater);
         _gridSizeY = Mathf.RoundToInt(_gridWorldSize.y / _nodeDiamater);
 
-        path = new List<Node>();
-
         CreateGrid();
+    }
+
+    public int MaxSize
+    {
+        get { return _gridSizeX * _gridSizeY; }
     }
 
     private void CreateGrid()
@@ -42,7 +46,8 @@ public class NodeGrid : MonoBehaviour
 
                 bool walkable = !(Physics.CheckSphere(worldPoint, _nodeRadius, _unwalkableMask));
 
-                _nodes[x, y] = new Node(walkable, worldPoint, x, y);
+                //TODO: Implement different movement costs for different objects. 
+                _nodes[x, y] = new Node(walkable, worldPoint, x, y, 1);
             }
         }
     }
@@ -68,12 +73,11 @@ public class NodeGrid : MonoBehaviour
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(_gridWorldSize.x, 1f, _gridWorldSize.y));
 
-        if(_nodes != null)
+        if(_nodes != null && _displayGizmos)
         {
             foreach(Node n in _nodes)
             {
                 Gizmos.color = (n._walkable) ? Color.white : Color.red;
-                if (path != null && path.Contains(n)) Gizmos.color = Color.green;
                 Gizmos.DrawCube(n._nodeWorldPosition, Vector3.one * (_nodeDiamater - 0.1f));
             }
         }
