@@ -50,7 +50,7 @@ public class ObjectPlacer : MonoBehaviour
 
         _mainCam = Camera.main;
 
-        
+
     }
 
     private void Update()
@@ -116,7 +116,7 @@ public class ObjectPlacer : MonoBehaviour
         Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
         //Subtracts a small amount of the extents to avoid overlappint colliders
         extents = extents.Subtract(0.02f);
-        
+
 
         //If the object is rotated swap the extents for the X and Z axis
         if (_isRotatated)
@@ -144,7 +144,40 @@ public class ObjectPlacer : MonoBehaviour
                 //Instantiates the object we are building
                 Instantiate(_placeObject, _buildPoint, objectRotation, transform);
                 //Sets the node as non walkable
+                _buildPoint.x += 0.2f;
+                _buildPoint.z += 0.2f;
                 _nodeGrid.GetNodeFromPosition(_buildPoint)._walkable = false;
+
+                Vector3 size = _placeObject._config._sizeInMetres;
+                if (size.x > 1)
+                {
+                    //Handle rotated objects here as well
+                    if (_isRotatated)
+                    {
+                        if (size.x == 2.0f)
+                        {
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z + 1.0f))._walkable = false;
+                        }
+                        else if (size.x == 3.0f)
+                        {
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z - 1.0f))._walkable = false;
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z + 1.0f))._walkable = false;
+                        }
+                    }
+                    else
+                    {
+                        if (size.x == 2.0f)
+                        {
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x + 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
+                        }
+                        else if (size.x == 3.0f)
+                        {
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x - 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
+                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x + 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
+                        }
+                    }
+
+                }
             }
         }
         //if we cannot build then set the placer previews material to red.
@@ -158,12 +191,52 @@ public class ObjectPlacer : MonoBehaviour
             Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
             {
-                //Destroy the object at that point
-                Destroy(hit.transform.gameObject);
-                //Sets that node to be walkable. 
-                _nodeGrid.GetNodeFromPosition(hit.transform.position)._walkable = true;
+                PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
+                if(objectToDestroy)
+                {
+                    //Sets that node to be walkable. 
+                    Vector3 deletePosition = hit.transform.position;
+                    deletePosition.x += 0.2f;
+                    deletePosition.z += 0.2f;
+                    _nodeGrid.GetNodeFromPosition(deletePosition)._walkable = true;
+
+                    //This shouldnt be the placed object this should be the object to destroyed.
+                    Vector3 size = objectToDestroy._config._sizeInMetres;
+                    if (size.x > 1)
+                    {
+                        //Handle rotated objects here as well
+                        if (_isRotatated)
+                        {
+                            if (size.x == 2.0f)
+                            {
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z + 1.0f))._walkable = true;
+                            }
+                            else if (size.x == 3.0f)
+                            {
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z - 1.0f))._walkable = true;
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z + 1.0f))._walkable = true;
+                            }
+                        }
+                        else
+                        {
+                            if (size.x == 2.0f)
+                            {
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x + 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
+                            }
+                            else if (size.x == 3.0f)
+                            {
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x - 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
+                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x + 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
+                            }
+                        }
+
+                    }
+
+                    //Destroy the object at that point
+                    Destroy(hit.transform.gameObject);
+                }
             }
-            
+
         }
     }
     private void HandlePreviewRotations()
