@@ -34,7 +34,12 @@ public class ObjectPlacer : MonoBehaviour
     bool _isRotatated = false;
     bool _canBuild = false;
 
+    bool _dragging = false;
+
     NodeGrid _nodeGrid;
+
+    Vector3 _dragStartPositon;
+    
 
     void Awake()
     {
@@ -113,10 +118,6 @@ public class ObjectPlacer : MonoBehaviour
                     _currentPoint.z -= 0.5f;
                 }
             } 
-            else
-            {
-
-            }
 
             _placerPreview.transform.position = _currentPoint;
         }
@@ -126,8 +127,8 @@ public class ObjectPlacer : MonoBehaviour
     private void InteractWithMouse()
     {
         //Gets the build point, this is needed as some objects have offsets to them
-        Vector3 _buildPoint = _currentPoint;
-        _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+        Vector3 buildPoint = _currentPoint;
+        buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
 
         Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
         //Subtracts a small amount of the extents to avoid overlappint colliders
@@ -143,7 +144,17 @@ public class ObjectPlacer : MonoBehaviour
         }
 
         //we can build if there is no collision
-        _canBuild = !Physics.CheckBox(_buildPoint, extents);
+        _canBuild = !Physics.CheckBox(buildPoint, extents);
+
+        if (_dragging)
+        {
+            //Handle preview logic
+            Debug.Log("Dragging");
+        }
+        else
+        {
+            Debug.Log("Not dragging");
+        }
 
         if (_canBuild)
         {
@@ -153,19 +164,76 @@ public class ObjectPlacer : MonoBehaviour
             //If we LMB click 
             if (Input.GetMouseButtonDown(0))
             {
-                //Store the rotation and set it to be y:90 if we are rotating the object 
-                Quaternion objectRotation = Quaternion.identity;
-                if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+                if (_placeObject._config._canDrag)
+                {
+                    _dragging = !_dragging;
 
-                //Instantiates the object we are building
-                Instantiate(_placeObject, _buildPoint, objectRotation, transform);
-                //Sets the node as non walkable
-                _buildPoint.x += 0.2f;
-                _buildPoint.z += 0.2f;
-                _nodeGrid.GetNodeFromPosition(_buildPoint)._walkable = false;
+                    if(_dragging) _dragStartPositon = buildPoint;
+                    //Handle placement logic
+                    if (!_dragging)
+                    {
+                        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+                        RaycastHit hit;
+                        if(Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+                        {
+                            Vector3 groundPoint = hit.point;
 
-                Vector3 size = _placeObject._config._sizeInMetres;
-                SetWalkable(size, _buildPoint, false);
+                            //Maybe this needs to be the absolute value
+                            float diffInX = groundPoint.x - _dragStartPositon.x;
+                            float diffInZ = groundPoint.z - _dragStartPositon.z;
+
+                            Debug.Log("X: " + diffInX + " Z: " + diffInZ);
+
+                            //Store the rotation and set it to be y:90 if we are rotating the object 
+                            Quaternion objectRotation = Quaternion.identity;
+                            if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+
+                            if (diffInX > diffInZ)
+                            {
+                                diffInX = Mathf.Floor(diffInX);
+
+                                for (int i = 0; i <= diffInX; i++)
+                                {
+                                    //Instantiates the object we are building
+                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                    //Sets the node as non walkable
+                                    Vector3 nodePos = _dragStartPositon;
+
+                                    nodePos.x += 0.2f;
+                                    nodePos.z += 0.2f;
+                                    _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
+
+                                    Vector3 size = _placeObject._config._sizeInMetres;
+                                    SetWalkable(size, nodePos, false);
+
+                                    _dragStartPositon.x++;
+                                }
+                            }
+                            else
+                            {
+
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //Store the rotation and set it to be y:90 if we are rotating the object 
+                    Quaternion objectRotation = Quaternion.identity;
+                    if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+
+                    //Instantiates the object we are building
+                    Instantiate(_placeObject, buildPoint, objectRotation, transform);
+                    //Sets the node as non walkable
+                    buildPoint.x += 0.2f;
+                    buildPoint.z += 0.2f;
+                    _nodeGrid.GetNodeFromPosition(buildPoint)._walkable = false;
+
+                    Vector3 size = _placeObject._config._sizeInMetres;
+                    SetWalkable(size, buildPoint, false);
+                }
+
+                
             }
         }
         //if we cannot build then set the placer previews material to red.
@@ -174,28 +242,37 @@ public class ObjectPlacer : MonoBehaviour
         //if the RMB is clicked
         if (Input.GetMouseButtonDown(1))
         {
-            //Perform a raycast from the mouse position to the the ground 
-            RaycastHit hit;
-            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
+            if (_dragging)
             {
-                PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
-                if(objectToDestroy)
+                _dragging = false;
+            }
+            else
+            {
+                //Perform a raycast from the mouse position to the the ground 
+                RaycastHit hit;
+                Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
                 {
-                    //Sets that node to be walkable. 
-                    Vector3 deletePosition = hit.transform.position;
-                    deletePosition.x += 0.2f;
-                    deletePosition.z += 0.2f;
-                    _nodeGrid.GetNodeFromPosition(deletePosition)._walkable = true;
+                    PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
+                    if (objectToDestroy)
+                    {
+                        //Sets that node to be walkable. 
+                        Vector3 deletePosition = hit.transform.position;
+                        deletePosition.x += 0.2f;
+                        deletePosition.z += 0.2f;
+                        _nodeGrid.GetNodeFromPosition(deletePosition)._walkable = true;
 
-                    //This shouldnt be the placed object this should be the object to destroyed.
-                    Vector3 size = objectToDestroy._config._sizeInMetres;
-                    SetWalkable(size, deletePosition, true);
+                        //This shouldnt be the placed object this should be the object to destroyed.
+                        Vector3 size = objectToDestroy._config._sizeInMetres;
+                        SetWalkable(size, deletePosition, true);
 
-                    //Destroy the object at that point
-                    Destroy(hit.transform.gameObject);
+                        //Destroy the object at that point
+                        Destroy(hit.transform.gameObject);
+                    }
                 }
             }
+
+
 
         }
     }
@@ -247,6 +324,7 @@ public class ObjectPlacer : MonoBehaviour
         _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
         //No longer rotating
         _isRotatated = false;
+        _dragging = false;
         //Rotate the preview back. 
         HandlePreviewRotations();
     }
