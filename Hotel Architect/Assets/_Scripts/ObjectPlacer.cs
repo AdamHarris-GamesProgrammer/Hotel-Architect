@@ -149,35 +149,7 @@ public class ObjectPlacer : MonoBehaviour
                 _nodeGrid.GetNodeFromPosition(_buildPoint)._walkable = false;
 
                 Vector3 size = _placeObject._config._sizeInMetres;
-                if (size.x > 1)
-                {
-                    //Handle rotated objects here as well
-                    if (_isRotatated)
-                    {
-                        if (size.x == 2.0f)
-                        {
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z + 1.0f))._walkable = false;
-                        }
-                        else if (size.x == 3.0f)
-                        {
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z - 1.0f))._walkable = false;
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x, _buildPoint.y, _buildPoint.z + 1.0f))._walkable = false;
-                        }
-                    }
-                    else
-                    {
-                        if (size.x == 2.0f)
-                        {
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x + 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
-                        }
-                        else if (size.x == 3.0f)
-                        {
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x - 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
-                            _nodeGrid.GetNodeFromPosition(new Vector3(_buildPoint.x + 1.0f, _buildPoint.y, _buildPoint.z))._walkable = false;
-                        }
-                    }
-
-                }
+                SetWalkable(size, _buildPoint, false);
             }
         }
         //if we cannot build then set the placer previews material to red.
@@ -202,35 +174,7 @@ public class ObjectPlacer : MonoBehaviour
 
                     //This shouldnt be the placed object this should be the object to destroyed.
                     Vector3 size = objectToDestroy._config._sizeInMetres;
-                    if (size.x > 1)
-                    {
-                        //Handle rotated objects here as well
-                        if (_isRotatated)
-                        {
-                            if (size.x == 2.0f)
-                            {
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z + 1.0f))._walkable = true;
-                            }
-                            else if (size.x == 3.0f)
-                            {
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z - 1.0f))._walkable = true;
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x, deletePosition.y, deletePosition.z + 1.0f))._walkable = true;
-                            }
-                        }
-                        else
-                        {
-                            if (size.x == 2.0f)
-                            {
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x + 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
-                            }
-                            else if (size.x == 3.0f)
-                            {
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x - 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
-                                _nodeGrid.GetNodeFromPosition(new Vector3(deletePosition.x + 1.0f, deletePosition.y, deletePosition.z))._walkable = true;
-                            }
-                        }
-
-                    }
+                    SetWalkable(size, deletePosition, true);
 
                     //Destroy the object at that point
                     Destroy(hit.transform.gameObject);
@@ -239,6 +183,40 @@ public class ObjectPlacer : MonoBehaviour
 
         }
     }
+
+    void SetWalkable(Vector3 size, Vector3 pos, bool toggle)
+    {
+        if (size.x > 1)
+        {
+            //Handle rotated objects here as well
+            if (_isRotatated)
+            {
+                if (size.x == 2.0f)
+                {
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x, pos.y, pos.z + 1.0f))._walkable = toggle;
+                }
+                else if (size.x == 3.0f)
+                {
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x, pos.y, pos.z - 1.0f))._walkable = toggle;
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x, pos.y, pos.z + 1.0f))._walkable = toggle;
+                }
+            }
+            else
+            {
+                if (size.x == 2.0f)
+                {
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x + 1.0f, pos.y, pos.z))._walkable = toggle;
+                }
+                else if (size.x == 3.0f)
+                {
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x - 1.0f, pos.y, pos.z))._walkable = toggle;
+                    _nodeGrid.GetNodeFromPosition(new Vector3(pos.x + 1.0f, pos.y, pos.z))._walkable = toggle;
+                }
+            }
+
+        }
+    }
+
     private void HandlePreviewRotations()
     {
         //Rotates on y by 90 degrees
