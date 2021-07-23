@@ -124,6 +124,24 @@ public class ObjectPlacer : MonoBehaviour
         else _placerPreview.SetActive(false);
     }
 
+    private void BuildObject(Vector3 pos)
+    {
+        Quaternion objectRotation = Quaternion.identity;
+        if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+
+        //Instantiates the object we are building
+        Instantiate(_placeObject, pos, objectRotation, transform);
+        //Sets the node as non walkable
+        Vector3 nodePos = pos;
+
+        nodePos.x += 0.2f;
+        nodePos.z += 0.2f;
+        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
+
+        Vector3 size = _placeObject._config._sizeInMetres;
+        SetWalkable(size, nodePos, false);
+    }
+
     private void InteractWithMouse()
     {
         //Gets the build point, this is needed as some objects have offsets to them
@@ -183,24 +201,9 @@ public class ObjectPlacer : MonoBehaviour
                             hp.x = Mathf.Floor(hp.x);
                             hp.z = Mathf.Floor(hp.z);
 
-                            Quaternion objectRotation = Quaternion.identity;
-                            if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-
                             if (bp.x == hp.x && bp.z == hp.z)
                             {
-                                Debug.Log(bp.x + " " + hp.x);
-
-                                //Instantiates the object we are building
-                                Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                //Sets the node as non walkable
-                                Vector3 nodePos = _dragStartPositon;
-
-                                nodePos.x += 0.2f;
-                                nodePos.z += 0.2f;
-                                _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
-
-                                Vector3 size = _placeObject._config._sizeInMetres;
-                                SetWalkable(size, nodePos, false);
+                                BuildObject(_dragStartPositon);
                             }
                             else
                             {
@@ -212,11 +215,6 @@ public class ObjectPlacer : MonoBehaviour
                                 diffInX = Mathf.Round(diffInX);
                                 diffInZ = Mathf.Round(diffInZ);
 
-                                Debug.Log("X: " + diffInX + " Z: " + diffInZ);
-
-                                //Store the rotation and set it to be y:90 if we are rotating the object 
-                                
-
                                 float absX = Mathf.Abs(diffInX);
                                 float absZ = Mathf.Abs(diffInZ);
 
@@ -226,35 +224,14 @@ public class ObjectPlacer : MonoBehaviour
 
                                     if (diffInX < 0) incremeneter = -1.0f;
 
-                                    diffInX = Mathf.Abs(diffInX);
-                                    for (int i = 0; i < diffInX; i++)
+                                    for (int i = 0; i < absX; i++)
                                     {
-                                        //Instantiates the object we are building
-                                        Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                        //Sets the node as non walkable
-                                        Vector3 nodePos = _dragStartPositon;
-
-                                        nodePos.x += 0.2f;
-                                        nodePos.z += 0.2f;
-                                        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
-
-                                        Vector3 size = _placeObject._config._sizeInMetres;
-                                        SetWalkable(size, nodePos, false);
+                                        BuildObject(_dragStartPositon);
 
                                         _dragStartPositon.x += incremeneter;
                                     }
 
-                                    //Instantiates the object we are building
-                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                    //Sets the node as non walkable
-                                    Vector3 endPoint = _dragStartPositon;
-
-                                    endPoint.x += 0.2f;
-                                    endPoint.z += 0.2f;
-                                    _nodeGrid.GetNodeFromPosition(endPoint)._walkable = false;
-
-                                    Vector3 sizeb = _placeObject._config._sizeInMetres;
-                                    SetWalkable(sizeb, endPoint, false);
+                                    BuildObject(_dragStartPositon);
                                 }
                                 else
                                 {
@@ -262,35 +239,14 @@ public class ObjectPlacer : MonoBehaviour
 
                                     if (diffInZ < 0) incremeneter = -1.0f;
 
-                                    diffInZ = Mathf.Abs(diffInZ);
-                                    for (int i = 0; i < diffInZ; i++)
+                                    for (int i = 0; i < absZ; i++)
                                     {
-                                        //Instantiates the object we are building
-                                        Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                        //Sets the node as non walkable
-                                        Vector3 nodePos = _dragStartPositon;
-
-                                        nodePos.x += 0.2f;
-                                        nodePos.z += 0.2f;
-                                        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
-
-                                        Vector3 size = _placeObject._config._sizeInMetres;
-                                        SetWalkable(size, nodePos, false);
+                                        BuildObject(_dragStartPositon);
 
                                         _dragStartPositon.z += incremeneter;
                                     }
 
-                                    //Instantiates the object we are building
-                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                    //Sets the node as non walkable
-                                    Vector3 endPoint = _dragStartPositon;
-
-                                    endPoint.x += 0.2f;
-                                    endPoint.z += 0.2f;
-                                    _nodeGrid.GetNodeFromPosition(endPoint)._walkable = false;
-
-                                    Vector3 sizeb = _placeObject._config._sizeInMetres;
-                                    SetWalkable(sizeb, endPoint, false);
+                                    BuildObject(_dragStartPositon);
                                 }
                             }
 
@@ -300,22 +256,8 @@ public class ObjectPlacer : MonoBehaviour
                 }
                 else
                 {
-                    //Store the rotation and set it to be y:90 if we are rotating the object 
-                    Quaternion objectRotation = Quaternion.identity;
-                    if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-
-                    //Instantiates the object we are building
-                    Instantiate(_placeObject, buildPoint, objectRotation, transform);
-                    //Sets the node as non walkable
-                    buildPoint.x += 0.2f;
-                    buildPoint.z += 0.2f;
-                    _nodeGrid.GetNodeFromPosition(buildPoint)._walkable = false;
-
-                    Vector3 size = _placeObject._config._sizeInMetres;
-                    SetWalkable(size, buildPoint, false);
+                    BuildObject(buildPoint);
                 }
-
-                
             }
         }
         //if we cannot build then set the placer previews material to red.
