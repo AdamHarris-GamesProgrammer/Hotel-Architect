@@ -149,11 +149,11 @@ public class ObjectPlacer : MonoBehaviour
         if (_dragging)
         {
             //Handle preview logic
-            Debug.Log("Dragging");
+            //Debug.Log("Dragging");
         }
         else
         {
-            Debug.Log("Not dragging");
+            //Debug.Log("Not dragging");
         }
 
         if (_canBuild)
@@ -176,43 +176,125 @@ public class ObjectPlacer : MonoBehaviour
                         RaycastHit hit;
                         if(Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
                         {
-                            Vector3 groundPoint = hit.point;
+                            Vector3 bp = _dragStartPositon;
+                            bp.x = Mathf.Floor(bp.x);
+                            bp.z = Mathf.Floor(bp.z);
+                            Vector3 hp = hit.point;
+                            hp.x = Mathf.Floor(hp.x);
+                            hp.z = Mathf.Floor(hp.z);
 
-                            //Maybe this needs to be the absolute value
-                            float diffInX = groundPoint.x - _dragStartPositon.x;
-                            float diffInZ = groundPoint.z - _dragStartPositon.z;
-
-                            Debug.Log("X: " + diffInX + " Z: " + diffInZ);
-
-                            //Store the rotation and set it to be y:90 if we are rotating the object 
                             Quaternion objectRotation = Quaternion.identity;
                             if (_isRotatated) objectRotation.eulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
 
-                            if (diffInX > diffInZ)
+                            if (bp.x == hp.x && bp.z == hp.z)
                             {
-                                diffInX = Mathf.Floor(diffInX);
+                                Debug.Log(bp.x + " " + hp.x);
 
-                                for (int i = 0; i <= diffInX; i++)
-                                {
-                                    //Instantiates the object we are building
-                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
-                                    //Sets the node as non walkable
-                                    Vector3 nodePos = _dragStartPositon;
+                                //Instantiates the object we are building
+                                Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                //Sets the node as non walkable
+                                Vector3 nodePos = _dragStartPositon;
 
-                                    nodePos.x += 0.2f;
-                                    nodePos.z += 0.2f;
-                                    _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
+                                nodePos.x += 0.2f;
+                                nodePos.z += 0.2f;
+                                _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
 
-                                    Vector3 size = _placeObject._config._sizeInMetres;
-                                    SetWalkable(size, nodePos, false);
-
-                                    _dragStartPositon.x++;
-                                }
+                                Vector3 size = _placeObject._config._sizeInMetres;
+                                SetWalkable(size, nodePos, false);
                             }
                             else
                             {
+                                Vector3 groundPoint = hit.point;
 
+                                //Maybe this needs to be the absolute value
+                                float diffInX = groundPoint.x - _dragStartPositon.x;
+                                float diffInZ = groundPoint.z - _dragStartPositon.z;
+                                diffInX = Mathf.Round(diffInX);
+                                diffInZ = Mathf.Round(diffInZ);
+
+                                Debug.Log("X: " + diffInX + " Z: " + diffInZ);
+
+                                //Store the rotation and set it to be y:90 if we are rotating the object 
+                                
+
+                                float absX = Mathf.Abs(diffInX);
+                                float absZ = Mathf.Abs(diffInZ);
+
+                                if (absX > absZ)
+                                {
+                                    float incremeneter = 1.0f;
+
+                                    if (diffInX < 0) incremeneter = -1.0f;
+
+                                    diffInX = Mathf.Abs(diffInX);
+                                    for (int i = 0; i < diffInX; i++)
+                                    {
+                                        //Instantiates the object we are building
+                                        Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                        //Sets the node as non walkable
+                                        Vector3 nodePos = _dragStartPositon;
+
+                                        nodePos.x += 0.2f;
+                                        nodePos.z += 0.2f;
+                                        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
+
+                                        Vector3 size = _placeObject._config._sizeInMetres;
+                                        SetWalkable(size, nodePos, false);
+
+                                        _dragStartPositon.x += incremeneter;
+                                    }
+
+                                    //Instantiates the object we are building
+                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                    //Sets the node as non walkable
+                                    Vector3 endPoint = _dragStartPositon;
+
+                                    endPoint.x += 0.2f;
+                                    endPoint.z += 0.2f;
+                                    _nodeGrid.GetNodeFromPosition(endPoint)._walkable = false;
+
+                                    Vector3 sizeb = _placeObject._config._sizeInMetres;
+                                    SetWalkable(sizeb, endPoint, false);
+                                }
+                                else
+                                {
+                                    float incremeneter = 1.0f;
+
+                                    if (diffInZ < 0) incremeneter = -1.0f;
+
+                                    diffInZ = Mathf.Abs(diffInZ);
+                                    for (int i = 0; i < diffInZ; i++)
+                                    {
+                                        //Instantiates the object we are building
+                                        Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                        //Sets the node as non walkable
+                                        Vector3 nodePos = _dragStartPositon;
+
+                                        nodePos.x += 0.2f;
+                                        nodePos.z += 0.2f;
+                                        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
+
+                                        Vector3 size = _placeObject._config._sizeInMetres;
+                                        SetWalkable(size, nodePos, false);
+
+                                        _dragStartPositon.z += incremeneter;
+                                    }
+
+                                    //Instantiates the object we are building
+                                    Instantiate(_placeObject, _dragStartPositon, objectRotation, transform);
+                                    //Sets the node as non walkable
+                                    Vector3 endPoint = _dragStartPositon;
+
+                                    endPoint.x += 0.2f;
+                                    endPoint.z += 0.2f;
+                                    _nodeGrid.GetNodeFromPosition(endPoint)._walkable = false;
+
+                                    Vector3 sizeb = _placeObject._config._sizeInMetres;
+                                    SetWalkable(sizeb, endPoint, false);
+                                }
                             }
+
+                            
                         }
                     }
                 }
@@ -271,9 +353,6 @@ public class ObjectPlacer : MonoBehaviour
                     }
                 }
             }
-
-
-
         }
     }
 
