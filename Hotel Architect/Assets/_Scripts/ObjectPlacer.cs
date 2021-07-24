@@ -181,18 +181,15 @@ public class ObjectPlacer : MonoBehaviour
                 float absX = Mathf.Abs(diffInX);
                 float absZ = Mathf.Abs(diffInZ);
 
+                Vector3 halfwayPoint = _dragStartPositon;
+                halfwayPoint.y = 0.0f;
+                Vector3 scale = _placerPreview.transform.localScale;
+
                 //Dragging along X
                 if (absX > absZ)
                 {
-                    Vector3 halfwayPoint = _dragStartPositon;
-                    //Moves the position to the center of the drag start and drag end.
-                    //halfwayPoint.x -= diffInX / 2.0f;
-                    halfwayPoint.y = 0.0f;
-
                     if(diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
                     else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
-                    //halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
-                    //halfwayPoint.x = Mathf.Round(halfwayPoint.x);
 
 
                     float flooredVal = Mathf.Floor(halfwayPoint.x);
@@ -207,22 +204,37 @@ public class ObjectPlacer : MonoBehaviour
 
                     _placerPreview.transform.position = halfwayPoint;
 
-
-
-                    Vector3 scale = _placerPreview.transform.localScale;
                     float xScale;
                     if(diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
                     else  xScale = Mathf.Min(diffInX, -1.0f);
 
-                    //float xScale = Mathf.Max(diffInX, 1.0f);
-
-                    absX = Mathf.Round(absX);
                     _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
                 }
                 //Dragging along Z
                 else
                 {
+                    if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
+                    else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
 
+
+                    float flooredVal = Mathf.Floor(halfwayPoint.z);
+                    float newVal = halfwayPoint.z - flooredVal;
+
+                    if (newVal > 0.75f) newVal = 1.0f;
+                    else if (newVal > 0.25f) newVal = 0.5f;
+                    else newVal = 0.0f;
+
+                    newVal += flooredVal;
+                    halfwayPoint.z = newVal;
+
+                    _placerPreview.transform.position = halfwayPoint;
+
+                    
+                    float zScale;
+                    if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
+                    else zScale = Mathf.Min(diffInZ, -1.0f);
+
+                    _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
                 }
             }
 
