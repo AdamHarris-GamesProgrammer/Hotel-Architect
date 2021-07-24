@@ -41,7 +41,7 @@ public class ObjectPlacer : MonoBehaviour
     Vector3 _dragStartPositon;
 
     Ray _rayFromCamera;
-    
+
 
     void Awake()
     {
@@ -108,12 +108,12 @@ public class ObjectPlacer : MonoBehaviour
             {
                 _currentPoint.z -= 0.5f;
 
-                if(!_isRotatated)
+                if (!_isRotatated)
                 {
                     _currentPoint.x += 0.5f;
                     _currentPoint.z -= 0.5f;
                 }
-            } 
+            }
 
             _placerPreview.transform.position = _currentPoint;
         }
@@ -209,6 +209,61 @@ public class ObjectPlacer : MonoBehaviour
         }
     }
 
+    private void DragBuild()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _interactableMask))
+        {
+            Vector3 bp = _dragStartPositon;
+            bp.Floor();
+            Vector3 hp = hit.point;
+            hp.Floor();
+
+            //Cover edge case where the players wants to place an object on the same point they started on
+            if (bp.x == hp.x && bp.z == hp.z) BuildObject(_dragStartPositon);
+            else
+            {
+                Vector3 groundPoint = hit.point;
+
+                //Maybe this needs to be the absolute value
+                float diffInX = groundPoint.x - _dragStartPositon.x;
+                float diffInZ = groundPoint.z - _dragStartPositon.z;
+                diffInX = Mathf.Round(diffInX);
+                diffInZ = Mathf.Round(diffInZ);
+
+                float absX = Mathf.Abs(diffInX);
+                float absZ = Mathf.Abs(diffInZ);
+
+                float incremeneter = 1.0f;
+
+                if (absX > absZ)
+                {
+                    if (diffInX < 0) incremeneter = -1.0f;
+
+                    for (int i = 0; i < absX; i++)
+                    {
+                        BuildObject(_dragStartPositon);
+
+                        _dragStartPositon.x += incremeneter;
+                    }
+                }
+                else
+                {
+                    if (diffInZ < 0) incremeneter = -1.0f;
+
+                    for (int i = 0; i < absZ; i++)
+                    {
+                        BuildObject(_dragStartPositon);
+
+                        _dragStartPositon.z += incremeneter;
+                    }
+                }
+
+                BuildObject(_dragStartPositon);
+            }
+        }
+    }
+
     private void InteractWithMouse()
     {
         //Gets the build point, this is needed as some objects have offsets to them
@@ -232,87 +287,33 @@ public class ObjectPlacer : MonoBehaviour
 
         if (_dragging) DragPreview();
 
-        if (_canBuild)
+        if (!_canBuild)
         {
-            //Sets the material of the placer preview
-            _meshRenderer.material = _validPlacement;
-
-            //If we LMB click 
-            if (Input.GetMouseButtonDown(0))
-            {
-                if (_placeObject._config._canDrag)
-                {
-                    _dragging = !_dragging;
-
-                    if(_dragging) _dragStartPositon = buildPoint;
-                    //Handle placement logic
-                    if (!_dragging)
-                    {
-                        RaycastHit hit;
-                        if(Physics.Raycast(_rayFromCamera, out hit, 100.0f, _interactableMask))
-                        {
-                            Vector3 bp = _dragStartPositon;
-                            bp.Floor();
-                            Vector3 hp = hit.point;
-                            hp.Floor();
-
-                            //Cover edge case where the players wants to place an object on the same point they started on
-                            if (bp.x == hp.x && bp.z == hp.z) BuildObject(_dragStartPositon);
-                            else
-                            {
-                                Vector3 groundPoint = hit.point;
-
-                                //Maybe this needs to be the absolute value
-                                float diffInX = groundPoint.x - _dragStartPositon.x;
-                                float diffInZ = groundPoint.z - _dragStartPositon.z;
-                                diffInX = Mathf.Round(diffInX);
-                                diffInZ = Mathf.Round(diffInZ);
-
-                                float absX = Mathf.Abs(diffInX);
-                                float absZ = Mathf.Abs(diffInZ);
-
-                                float incremeneter = 1.0f;
-
-                                if (absX > absZ)
-                                {
-                                    if (diffInX < 0) incremeneter = -1.0f;
-
-                                    for (int i = 0; i < absX; i++)
-                                    {
-                                        BuildObject(_dragStartPositon);
-
-                                        _dragStartPositon.x += incremeneter;
-                                    }
-                                }
-                                else
-                                {
-                                    if (diffInZ < 0) incremeneter = -1.0f;
-
-                                    for (int i = 0; i < absZ; i++)
-                                    {
-                                        BuildObject(_dragStartPositon);
-
-                                        _dragStartPositon.z += incremeneter;
-                                    }
-                                }
-
-                                BuildObject(_dragStartPositon);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    BuildObject(buildPoint);
-                }
-            }
+            _meshRenderer.material = _invalidPlacement;
+            return;
         }
-        //if we cannot build then set the placer previews material to red.
-        else _meshRenderer.material = _invalidPlacement;
+
+        //Sets the material of the placer preview
+        _meshRenderer.material = _validPlacement;
+
+        //If we LMB click 
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (!_placeObject._config._canDrag)
+            {
+                BuildObject(buildPoint);
+                return;
+            }
+
+            _dragging = !_dragging;
+
+            if (_dragging) _dragStartPositon = buildPoint;
+            //Handle placement logic
+            else DragBuild();
+        }
 
         //if the RMB is clicked
-        if (Input.GetMouseButtonDown(1))
-            RMBLogic();
+        if (Input.GetMouseButtonDown(1)) RMBLogic();
     }
 
     float RoundToRange(float inVal)
