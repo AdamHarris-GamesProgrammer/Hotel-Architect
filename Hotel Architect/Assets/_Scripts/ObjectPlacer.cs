@@ -108,11 +108,7 @@ public class ObjectPlacer : MonoBehaviour
                 //_currentPoint.x -= 1.0f;
                 _currentPoint.z -= 0.5f;
 
-                if(_isRotatated)
-                {
-                    //_currentPoint.x -= 1.0f;
-                }
-                else
+                if(!_isRotatated)
                 {
                     _currentPoint.x += 0.5f;
                     _currentPoint.z -= 0.5f;
@@ -136,12 +132,62 @@ public class ObjectPlacer : MonoBehaviour
 
         nodePos.x += 0.2f;
         nodePos.z += 0.2f;
-        _nodeGrid.GetNodeFromPosition(nodePos)._walkable = false;
-
         Vector3 size = _placeObject._config._sizeInMetres;
         SetWalkable(size, nodePos, false);
 
         _placerPreview.transform.localScale = size;
+    }
+
+    private void DragPreview()
+    {
+        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+        {
+            Vector3 hitPoint = hit.point;
+
+            float diffInX = hitPoint.x - _dragStartPositon.x;
+            float diffInZ = hitPoint.z - _dragStartPositon.z;
+
+            float absX = Mathf.Abs(diffInX);
+            float absZ = Mathf.Abs(diffInZ);
+
+            Vector3 halfwayPoint = _dragStartPositon;
+            halfwayPoint.y = 0.0f;
+            Vector3 scale = _placerPreview.transform.localScale;
+
+            //Dragging along X
+            if (absX > absZ)
+            {
+                if (diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
+                else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
+
+                halfwayPoint.x = RoundToRange(halfwayPoint.x);
+
+                float xScale;
+                if (diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
+                else xScale = Mathf.Min(diffInX, -1.0f);
+
+                _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
+            }
+            //Dragging along Z
+            else
+            {
+                if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
+                else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
+
+                halfwayPoint.z = RoundToRange(halfwayPoint.z);
+
+                float zScale;
+                if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
+                else zScale = Mathf.Min(diffInZ, -1.0f);
+
+                _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
+            }
+
+            _placerPreview.transform.position = halfwayPoint;
+        }
     }
 
     private void InteractWithMouse()
@@ -151,9 +197,11 @@ public class ObjectPlacer : MonoBehaviour
         buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
 
         Vector3 extents = _placeObject._config._sizeInMetres / 2.0f;
-        //Subtracts a small amount of the extents to avoid overlappint colliders
+        //Subtracts a small amount of the extents to avoid overlapping colliders
         extents = extents.Subtract(0.02f);
 
+        //we can build if there is no collision
+        _canBuild = !Physics.CheckBox(buildPoint, extents);
 
         //If the object is rotated swap the extents for the X and Z axis
         if (_isRotatated)
@@ -163,60 +211,7 @@ public class ObjectPlacer : MonoBehaviour
             extents.z = temp;
         }
 
-        //we can build if there is no collision
-        _canBuild = !Physics.CheckBox(buildPoint, extents);
-
-        if (_dragging)
-        {
-            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
-            {
-                Vector3 hitPoint = hit.point;
-
-                float diffInX = hitPoint.x - _dragStartPositon.x;
-                float diffInZ = hitPoint.z - _dragStartPositon.z;
-
-                float absX = Mathf.Abs(diffInX);
-                float absZ = Mathf.Abs(diffInZ);
-
-                Vector3 halfwayPoint = _dragStartPositon;
-                halfwayPoint.y = 0.0f;
-                Vector3 scale = _placerPreview.transform.localScale;
-
-                //Dragging along X
-                if (absX > absZ)
-                {
-                    if(diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
-                    else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
-
-                    halfwayPoint.x = RoundToRange(halfwayPoint.x);
-
-                    float xScale;
-                    if(diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
-                    else  xScale = Mathf.Min(diffInX, -1.0f);
-
-                    _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
-                }
-                //Dragging along Z
-                else
-                {
-                    if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
-                    else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
-
-                    halfwayPoint.z = RoundToRange(halfwayPoint.z);
-
-                    float zScale;
-                    if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
-                    else zScale = Mathf.Min(diffInZ, -1.0f);
-
-                    _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
-                }
-
-                _placerPreview.transform.position = halfwayPoint;
-            }
-        }
+        if (_dragging) DragPreview();
 
         if (_canBuild)
         {
@@ -293,8 +288,6 @@ public class ObjectPlacer : MonoBehaviour
                                     BuildObject(_dragStartPositon);
                                 }
                             }
-
-                            
                         }
                     }
                 }
@@ -313,6 +306,7 @@ public class ObjectPlacer : MonoBehaviour
             if (_dragging)
             {
                 _dragging = false;
+                _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
             }
             else
             {
@@ -328,9 +322,6 @@ public class ObjectPlacer : MonoBehaviour
                         Vector3 deletePosition = hit.transform.position;
                         deletePosition.x += 0.2f;
                         deletePosition.z += 0.2f;
-                        _nodeGrid.GetNodeFromPosition(deletePosition)._walkable = true;
-
-                        //This shouldnt be the placed object this should be the object to destroyed.
                         Vector3 size = objectToDestroy._config._sizeInMetres;
                         SetWalkable(size, deletePosition, true);
 
@@ -358,6 +349,8 @@ public class ObjectPlacer : MonoBehaviour
 
     void SetWalkable(Vector3 size, Vector3 pos, bool toggle)
     {
+        _nodeGrid.GetNodeFromPosition(pos)._walkable = toggle;
+
         if (size.x > 1)
         {
             //Handle rotated objects here as well
