@@ -39,6 +39,8 @@ public class ObjectPlacer : MonoBehaviour
     NodeGrid _nodeGrid;
 
     Vector3 _dragStartPositon;
+
+    Ray _rayFromCamera;
     
 
     void Awake()
@@ -58,6 +60,8 @@ public class ObjectPlacer : MonoBehaviour
 
     private void Update()
     {
+        _rayFromCamera = _mainCam.ScreenPointToRay(Input.mousePosition);
+
         InteractWithKeyboard();
 
         SnapPreviewToGrid();
@@ -85,12 +89,9 @@ public class ObjectPlacer : MonoBehaviour
 
     void SnapPreviewToGrid()
     {
-        //Gets a ray from the camera to the screen based on mouse position
-        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-
         RaycastHit hit;
         //Casts from mouse point to world
-        if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+        if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _interactableMask))
         {
             _currentPoint = hit.point;
 
@@ -132,18 +133,14 @@ public class ObjectPlacer : MonoBehaviour
 
         nodePos.x += 0.2f;
         nodePos.z += 0.2f;
-        Vector3 size = _placeObject._config._sizeInMetres;
-        SetWalkable(size, nodePos, false);
-
-        _placerPreview.transform.localScale = size;
+        SetWalkable(_placeObject._config._sizeInMetres, nodePos, false);
+        _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
     }
 
     private void DragPreview()
     {
-        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+        if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _interactableMask))
         {
             Vector3 hitPoint = hit.point;
 
@@ -200,9 +197,6 @@ public class ObjectPlacer : MonoBehaviour
         //Subtracts a small amount of the extents to avoid overlapping colliders
         extents = extents.Subtract(0.02f);
 
-        //we can build if there is no collision
-        _canBuild = !Physics.CheckBox(buildPoint, extents);
-
         //If the object is rotated swap the extents for the X and Z axis
         if (_isRotatated)
         {
@@ -210,6 +204,9 @@ public class ObjectPlacer : MonoBehaviour
             extents.x = extents.z;
             extents.z = temp;
         }
+
+        //we can build if there is no collision
+        _canBuild = !Physics.CheckBox(buildPoint, extents);
 
         if (_dragging) DragPreview();
 
@@ -229,21 +226,16 @@ public class ObjectPlacer : MonoBehaviour
                     //Handle placement logic
                     if (!_dragging)
                     {
-                        Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
                         RaycastHit hit;
-                        if(Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
+                        if(Physics.Raycast(_rayFromCamera, out hit, 100.0f, _interactableMask))
                         {
                             Vector3 bp = _dragStartPositon;
-                            bp.x = Mathf.Floor(bp.x);
-                            bp.z = Mathf.Floor(bp.z);
+                            bp.Floor();
                             Vector3 hp = hit.point;
-                            hp.x = Mathf.Floor(hp.x);
-                            hp.z = Mathf.Floor(hp.z);
+                            hp.Floor();
 
-                            if (bp.x == hp.x && bp.z == hp.z)
-                            {
-                                BuildObject(_dragStartPositon);
-                            }
+                            //Cover edge case where the players wants to place an object on the same point they started on
+                            if (bp.x == hp.x && bp.z == hp.z) BuildObject(_dragStartPositon);
                             else
                             {
                                 Vector3 groundPoint = hit.point;
@@ -257,10 +249,10 @@ public class ObjectPlacer : MonoBehaviour
                                 float absX = Mathf.Abs(diffInX);
                                 float absZ = Mathf.Abs(diffInZ);
 
+                                float incremeneter = 1.0f;
+
                                 if (absX > absZ)
                                 {
-                                    float incremeneter = 1.0f;
-
                                     if (diffInX < 0) incremeneter = -1.0f;
 
                                     for (int i = 0; i < absX; i++)
@@ -269,13 +261,9 @@ public class ObjectPlacer : MonoBehaviour
 
                                         _dragStartPositon.x += incremeneter;
                                     }
-
-                                    BuildObject(_dragStartPositon);
                                 }
                                 else
                                 {
-                                    float incremeneter = 1.0f;
-
                                     if (diffInZ < 0) incremeneter = -1.0f;
 
                                     for (int i = 0; i < absZ; i++)
@@ -284,9 +272,9 @@ public class ObjectPlacer : MonoBehaviour
 
                                         _dragStartPositon.z += incremeneter;
                                     }
-
-                                    BuildObject(_dragStartPositon);
                                 }
+
+                                BuildObject(_dragStartPositon);
                             }
                         }
                     }
@@ -312,8 +300,7 @@ public class ObjectPlacer : MonoBehaviour
             {
                 //Perform a raycast from the mouse position to the the ground 
                 RaycastHit hit;
-                Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out hit, 100.0f, _placeableMask))
+                if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _placeableMask))
                 {
                     PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
                     if (objectToDestroy)
@@ -322,8 +309,8 @@ public class ObjectPlacer : MonoBehaviour
                         Vector3 deletePosition = hit.transform.position;
                         deletePosition.x += 0.2f;
                         deletePosition.z += 0.2f;
-                        Vector3 size = objectToDestroy._config._sizeInMetres;
-                        SetWalkable(size, deletePosition, true);
+                        //deletePosition.Add(0.2f);
+                        SetWalkable(objectToDestroy._config._sizeInMetres, deletePosition, true);
 
                         //Destroy the object at that point
                         Destroy(hit.transform.gameObject);

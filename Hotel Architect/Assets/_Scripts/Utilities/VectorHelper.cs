@@ -12,6 +12,14 @@ public static class VectorHelper
         return v;
     }
 
+    public static Vector3 Floor(this Vector3 v)
+    {
+        v.x = Mathf.Floor(v.x);
+        v.y = Mathf.Floor(v.y);
+        v.z = Mathf.Floor(v.z);
+        return v;
+    }
+
     public static Vector3 Subtract(this Vector3 v, float val)
     {
         v.x -= val;
