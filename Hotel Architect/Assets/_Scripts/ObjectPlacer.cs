@@ -140,6 +140,8 @@ public class ObjectPlacer : MonoBehaviour
 
         Vector3 size = _placeObject._config._sizeInMetres;
         SetWalkable(size, nodePos, false);
+
+        _placerPreview.transform.localScale = size;
     }
 
     private void InteractWithMouse()
@@ -166,12 +168,50 @@ public class ObjectPlacer : MonoBehaviour
 
         if (_dragging)
         {
-            //Handle preview logic
-            //Debug.Log("Dragging");
-        }
-        else
-        {
-            //Debug.Log("Not dragging");
+            float diffInX = _dragStartPositon.x - _currentPoint.x;
+            float diffInZ = _dragStartPositon.z - _currentPoint.z;
+
+            float absX = Mathf.Abs(diffInX);
+            float absZ = Mathf.Abs(diffInZ);
+
+            //Dragging along X
+            if (absX > absZ)
+            {
+                Vector3 halfwayPoint = _dragStartPositon;
+                halfwayPoint.x -= diffInX / 2.0f;
+
+                //halfwayPoint.x += 1.0f;
+
+                halfwayPoint.y = 0.0f;
+                //halfwayPoint.x = Mathf.Floor(halfwayPoint.x);
+
+                float val = halfwayPoint.x;
+                float flooredVal = Mathf.Floor(val);
+                val -= flooredVal;
+                if(val < 0.25f)
+                {
+                    
+                }
+                else if(val < 0.75f)
+                {
+                    flooredVal += 0.5f;
+                }
+                else
+                {
+                    flooredVal += 1.0f;
+                }
+
+                halfwayPoint.x = flooredVal;
+
+                _placerPreview.transform.position = halfwayPoint;
+                Vector3 scale = _placerPreview.transform.localScale;
+                _placerPreview.transform.localScale = new Vector3(absX, scale.y, scale.z);
+            }
+            //Dragging along Z
+            else
+            {
+
+            }
         }
 
         if (_canBuild)
