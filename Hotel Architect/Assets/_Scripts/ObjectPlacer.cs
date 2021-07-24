@@ -103,10 +103,9 @@ public class ObjectPlacer : MonoBehaviour
             _currentPoint = _currentPoint.Round();
             _currentPoint.y = 0.0f;
 
-            //Offsets objects slightly based on how large they are.
+            //Offsets objects slightly based on how large they are. 
             if (_placeObject._config._sizeInMetres.x % 2 == 0)
             {
-                //_currentPoint.x -= 1.0f;
                 _currentPoint.z -= 0.5f;
 
                 if(!_isRotatated)
@@ -128,12 +127,9 @@ public class ObjectPlacer : MonoBehaviour
 
         //Instantiates the object we are building
         Instantiate(_placeObject, pos, objectRotation, transform);
-        //Sets the node as non walkable
-        Vector3 nodePos = pos;
 
-        nodePos.x += 0.2f;
-        nodePos.z += 0.2f;
-        SetWalkable(_placeObject._config._sizeInMetres, nodePos, false);
+        //Sets the node as non walkable
+        SetWalkable(_placeObject._config._sizeInMetres, pos, false);
         _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
     }
 
@@ -184,6 +180,32 @@ public class ObjectPlacer : MonoBehaviour
             }
 
             _placerPreview.transform.position = halfwayPoint;
+        }
+    }
+
+    private void RMBLogic()
+    {
+        if (_dragging)
+        {
+            _dragging = false;
+            _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
+        }
+        else
+        {
+            //Perform a raycast from the mouse position to the the ground 
+            RaycastHit hit;
+            if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _placeableMask))
+            {
+                PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
+                if (objectToDestroy)
+                {
+                    //Sets that node to be walkable. 
+                    SetWalkable(objectToDestroy._config._sizeInMetres, hit.transform.position, true);
+
+                    //Destroy the object at that point
+                    Destroy(hit.transform.gameObject);
+                }
+            }
         }
     }
 
@@ -290,34 +312,7 @@ public class ObjectPlacer : MonoBehaviour
 
         //if the RMB is clicked
         if (Input.GetMouseButtonDown(1))
-        {
-            if (_dragging)
-            {
-                _dragging = false;
-                _placerPreview.transform.localScale = _placeObject._config._sizeInMetres;
-            }
-            else
-            {
-                //Perform a raycast from the mouse position to the the ground 
-                RaycastHit hit;
-                if (Physics.Raycast(_rayFromCamera, out hit, 100.0f, _placeableMask))
-                {
-                    PlacableObject objectToDestroy = hit.transform.GetComponentInParent<PlacableObject>();
-                    if (objectToDestroy)
-                    {
-                        //Sets that node to be walkable. 
-                        Vector3 deletePosition = hit.transform.position;
-                        deletePosition.x += 0.2f;
-                        deletePosition.z += 0.2f;
-                        //deletePosition.Add(0.2f);
-                        SetWalkable(objectToDestroy._config._sizeInMetres, deletePosition, true);
-
-                        //Destroy the object at that point
-                        Destroy(hit.transform.gameObject);
-                    }
-                }
-            }
-        }
+            RMBLogic();
     }
 
     float RoundToRange(float inVal)
@@ -336,6 +331,9 @@ public class ObjectPlacer : MonoBehaviour
 
     void SetWalkable(Vector3 size, Vector3 pos, bool toggle)
     {
+        pos.x += 0.2f;
+        pos.z += 0.2f;
+
         _nodeGrid.GetNodeFromPosition(pos)._walkable = toggle;
 
         if (size.x > 1)
