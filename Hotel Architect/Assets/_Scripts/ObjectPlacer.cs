@@ -191,18 +191,7 @@ public class ObjectPlacer : MonoBehaviour
                     if(diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
                     else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
 
-
-                    float flooredVal = Mathf.Floor(halfwayPoint.x);
-                    float newVal = halfwayPoint.x - flooredVal;
-
-                    if(newVal > 0.75f) newVal = 1.0f;
-                    else if(newVal > 0.25f) newVal = 0.5f;
-                    else newVal = 0.0f;
-
-                    newVal += flooredVal;
-                    halfwayPoint.x = newVal;
-
-                    _placerPreview.transform.position = halfwayPoint;
+                    halfwayPoint.x = RoundToRange(halfwayPoint.x);
 
                     float xScale;
                     if(diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
@@ -216,29 +205,17 @@ public class ObjectPlacer : MonoBehaviour
                     if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
                     else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
 
+                    halfwayPoint.z = RoundToRange(halfwayPoint.z);
 
-                    float flooredVal = Mathf.Floor(halfwayPoint.z);
-                    float newVal = halfwayPoint.z - flooredVal;
-
-                    if (newVal > 0.75f) newVal = 1.0f;
-                    else if (newVal > 0.25f) newVal = 0.5f;
-                    else newVal = 0.0f;
-
-                    newVal += flooredVal;
-                    halfwayPoint.z = newVal;
-
-                    _placerPreview.transform.position = halfwayPoint;
-
-                    
                     float zScale;
                     if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
                     else zScale = Mathf.Min(diffInZ, -1.0f);
 
                     _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
                 }
+
+                _placerPreview.transform.position = halfwayPoint;
             }
-
-
         }
 
         if (_canBuild)
@@ -363,6 +340,20 @@ public class ObjectPlacer : MonoBehaviour
                 }
             }
         }
+    }
+
+    float RoundToRange(float inVal)
+    {
+        float flooredVal = Mathf.Floor(inVal);
+        float newVal = inVal - flooredVal;
+
+        if (newVal > 0.75f) newVal = 1.0f;
+        else if (newVal > 0.25f) newVal = 0.5f;
+        else newVal = 0.0f;
+
+        newVal += flooredVal;
+
+        return newVal;
     }
 
     void SetWalkable(Vector3 size, Vector3 pos, bool toggle)
