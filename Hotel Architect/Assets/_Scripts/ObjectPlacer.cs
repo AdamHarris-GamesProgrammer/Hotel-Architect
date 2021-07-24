@@ -168,50 +168,58 @@ public class ObjectPlacer : MonoBehaviour
 
         if (_dragging)
         {
-            float diffInX = _dragStartPositon.x - _currentPoint.x;
-            float diffInZ = _dragStartPositon.z - _currentPoint.z;
+            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
 
-            float absX = Mathf.Abs(diffInX);
-            float absZ = Mathf.Abs(diffInZ);
-
-            //Dragging along X
-            if (absX > absZ)
+            if (Physics.Raycast(ray, out hit, 100.0f, _interactableMask))
             {
-                Vector3 halfwayPoint = _dragStartPositon;
-                halfwayPoint.x -= diffInX / 2.0f;
+                Vector3 hitPoint = hit.point;
 
-                //halfwayPoint.x += 1.0f;
+                float diffInX = hitPoint.x - _dragStartPositon.x;
+                float diffInZ = hitPoint.z - _dragStartPositon.z;
 
-                halfwayPoint.y = 0.0f;
-                //halfwayPoint.x = Mathf.Floor(halfwayPoint.x);
+                float absX = Mathf.Abs(diffInX);
+                float absZ = Mathf.Abs(diffInZ);
 
-                float val = halfwayPoint.x;
-                float flooredVal = Mathf.Floor(val);
-                val -= flooredVal;
-                if(val < 0.25f)
+                //Dragging along X
+                if (absX > absZ)
                 {
-                    
+                    Vector3 halfwayPoint = _dragStartPositon;
+                    //Moves the position to the center of the drag start and drag end.
+                    //halfwayPoint.x -= diffInX / 2.0f;
+                    halfwayPoint.y = 0.0f;
+                    halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
+                    //halfwayPoint.x = Mathf.Round(halfwayPoint.x);
+
+
+                    float flooredVal = Mathf.Floor(halfwayPoint.x);
+                    float newVal = halfwayPoint.x - flooredVal;
+
+                    if(newVal > 0.75f) newVal = 1.0f;
+                    else if(newVal > 0.25f) newVal = 0.5f;
+                    else newVal = 0.0f;
+
+                    newVal += flooredVal;
+                    halfwayPoint.x = newVal;
+
+                    _placerPreview.transform.position = halfwayPoint;
+
+
+
+                    Vector3 scale = _placerPreview.transform.localScale;
+                    float xScale = Mathf.Max(diffInX, 1.0f);
+
+                    absX = Mathf.Round(absX);
+                    _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
                 }
-                else if(val < 0.75f)
-                {
-                    flooredVal += 0.5f;
-                }
+                //Dragging along Z
                 else
                 {
-                    flooredVal += 1.0f;
+
                 }
-
-                halfwayPoint.x = flooredVal;
-
-                _placerPreview.transform.position = halfwayPoint;
-                Vector3 scale = _placerPreview.transform.localScale;
-                _placerPreview.transform.localScale = new Vector3(absX, scale.y, scale.z);
             }
-            //Dragging along Z
-            else
-            {
 
-            }
+
         }
 
         if (_canBuild)
