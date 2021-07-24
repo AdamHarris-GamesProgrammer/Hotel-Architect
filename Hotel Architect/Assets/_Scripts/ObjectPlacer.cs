@@ -188,7 +188,10 @@ public class ObjectPlacer : MonoBehaviour
                     //Moves the position to the center of the drag start and drag end.
                     //halfwayPoint.x -= diffInX / 2.0f;
                     halfwayPoint.y = 0.0f;
-                    halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
+
+                    if(diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
+                    else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
+                    //halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
                     //halfwayPoint.x = Mathf.Round(halfwayPoint.x);
 
 
@@ -207,7 +210,11 @@ public class ObjectPlacer : MonoBehaviour
 
 
                     Vector3 scale = _placerPreview.transform.localScale;
-                    float xScale = Mathf.Max(diffInX, 1.0f);
+                    float xScale;
+                    if(diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
+                    else  xScale = Mathf.Min(diffInX, -1.0f);
+
+                    //float xScale = Mathf.Max(diffInX, 1.0f);
 
                     absX = Mathf.Round(absX);
                     _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
