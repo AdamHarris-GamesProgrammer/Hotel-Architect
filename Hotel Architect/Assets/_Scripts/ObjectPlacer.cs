@@ -129,7 +129,8 @@ public class ObjectPlacer : MonoBehaviour
                 }
             }
 
-            _placerPreview.transform.position = _currentPoint;
+            if(!_dragging)
+                _placerPreview.transform.position = _currentPoint;
         }
         else _placerPreview.SetActive(false);
     }
@@ -162,7 +163,7 @@ public class ObjectPlacer : MonoBehaviour
 
             Vector3 halfwayPoint = _dragStartPositon;
             halfwayPoint.y = 0.0f;
-            Vector3 scale = _placerPreview.transform.localScale;
+            Vector3 scale = _placeObject._config._sizeInMetres;
 
             //Dragging along X
             if (absX > absZ)
