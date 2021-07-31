@@ -309,6 +309,8 @@ public class ObjectPlacer : MonoBehaviour
                     if (diffInX < 0) xIncrement = -1.0f; 
                     if (diffInZ < 0) zIncrement = -1.0f;
 
+                    float originalZ = _dragStartPositon.z;
+
                     for (int i = 0; i < absX; i++)
                     {
                         for (int j = 0; j < absZ; j++)
@@ -318,6 +320,7 @@ public class ObjectPlacer : MonoBehaviour
                             _dragStartPositon.z += zIncrement;
                         }
 
+                        _dragStartPositon.z = originalZ;
                         _dragStartPositon.x += xIncrement;
                     }
                 }
