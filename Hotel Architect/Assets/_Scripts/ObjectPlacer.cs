@@ -316,7 +316,6 @@ public class ObjectPlacer : MonoBehaviour
                         for (int j = 0; j < absZ; j++)
                         {
                             BuildObject(_dragStartPositon);
-
                             _dragStartPositon.z += zIncrement;
                         }
                     }
@@ -325,8 +324,6 @@ public class ObjectPlacer : MonoBehaviour
                         for (int j = 0; j < absX; j++)
                         {
                             BuildObject(_dragStartPositon);
-                            Debug.Log("Building Object at: " + _dragStartPositon);
-
                             _dragStartPositon.x += xIncrement;
                         }
                     }
@@ -339,7 +336,6 @@ public class ObjectPlacer : MonoBehaviour
                             for (int j = 0; j < absZ; j++)
                             {
                                 BuildObject(_dragStartPositon);
-
                                 _dragStartPositon.z += zIncrement;
                             }
 
@@ -361,8 +357,6 @@ public class ObjectPlacer : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Debug.Log("Click");
-
             BuildObject(_buildPoint);
 
             _framesForHold = 0;
@@ -386,7 +380,6 @@ public class ObjectPlacer : MonoBehaviour
                     DragPreview();
                 else
                 {
-                    Debug.Log("Begin Hold");
                     _dragStartPositon = _buildPoint;
                     _dragging = true;
                 }
@@ -396,8 +389,6 @@ public class ObjectPlacer : MonoBehaviour
         {
             if (_dragging)
             {
-                Debug.Log("End Hold");
-
                 DragBuild();
 
                 _dragging = false;
