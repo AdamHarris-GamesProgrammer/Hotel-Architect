@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: Half Wall
   m_EditorClassIdentifier: 
   _sizeInMetres: {x: 1, y: 1, z: 1}
+  _canRotate: 0
+  _canDrag: 1
+  _biDirectionalDrag: 0

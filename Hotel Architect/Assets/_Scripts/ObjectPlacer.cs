@@ -74,8 +74,6 @@ public class ObjectPlacer : MonoBehaviour
         _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
 
         MouseContinuous();
-
-        //if (_dragTest) DragPreview();
     }
 
     private void FixedUpdate()
@@ -129,7 +127,7 @@ public class ObjectPlacer : MonoBehaviour
                 }
             }
 
-            if(!_dragging)
+            if (!_dragging)
                 _placerPreview.transform.position = _currentPoint;
         }
         else _placerPreview.SetActive(false);
@@ -165,8 +163,38 @@ public class ObjectPlacer : MonoBehaviour
             halfwayPoint.y = 0.0f;
             Vector3 scale = _placeObject._config._sizeInMetres;
 
-            //Dragging along X
-            if (absX > absZ)
+            if (!_placeObject._config._biDirectionalDrag)
+            {
+                //Dragging along X
+                if (absX > absZ)
+                {
+                    if (diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
+                    else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
+
+                    halfwayPoint.x = RoundToRange(halfwayPoint.x);
+
+                    float xScale;
+                    if (diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
+                    else xScale = Mathf.Min(diffInX, -1.0f);
+
+                    _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
+                }
+                //Dragging along Z
+                else
+                {
+                    if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
+                    else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
+
+                    halfwayPoint.z = RoundToRange(halfwayPoint.z);
+
+                    float zScale;
+                    if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
+                    else zScale = Mathf.Min(diffInZ, -1.0f);
+
+                    _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
+                }
+            }
+            else
             {
                 if (diffInX > 0.0f) halfwayPoint.x = _dragStartPositon.x + (diffInX / 2.0f);
                 else halfwayPoint.x = _dragStartPositon.x - (absX / 2.0f);
@@ -177,11 +205,6 @@ public class ObjectPlacer : MonoBehaviour
                 if (diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
                 else xScale = Mathf.Min(diffInX, -1.0f);
 
-                _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
-            }
-            //Dragging along Z
-            else
-            {
                 if (diffInZ > 0.0f) halfwayPoint.z = _dragStartPositon.z + (diffInZ / 2.0f);
                 else halfwayPoint.z = _dragStartPositon.z - (absZ / 2.0f);
 
@@ -191,7 +214,7 @@ public class ObjectPlacer : MonoBehaviour
                 if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
                 else zScale = Mathf.Min(diffInZ, -1.0f);
 
-                _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
+                _placerPreview.transform.localScale = new Vector3(xScale, scale.y, zScale);
             }
 
             _placerPreview.transform.position = halfwayPoint;
@@ -249,30 +272,57 @@ public class ObjectPlacer : MonoBehaviour
                 float absX = Mathf.Abs(diffInX);
                 float absZ = Mathf.Abs(diffInZ);
 
-                float incremeneter = 1.0f;
+                
 
-                if (absX > absZ)
+                if (!_placeObject._config._biDirectionalDrag)
                 {
-                    if (diffInX < 0) incremeneter = -1.0f;
+                    float incremeneter = 1.0f;
 
-                    for (int i = 0; i < absX; i++)
+                    if (absX > absZ)
                     {
-                        BuildObject(_dragStartPositon);
+                        if (diffInX < 0) incremeneter = -1.0f;
 
-                        _dragStartPositon.x += incremeneter;
+                        for (int i = 0; i < absX; i++)
+                        {
+                            BuildObject(_dragStartPositon);
+
+                            _dragStartPositon.x += incremeneter;
+                        }
+                    }
+                    else
+                    {
+                        if (diffInZ < 0) incremeneter = -1.0f;
+
+                        for (int i = 0; i < absZ; i++)
+                        {
+                            BuildObject(_dragStartPositon);
+
+                            _dragStartPositon.z += incremeneter;
+                        }
                     }
                 }
                 else
                 {
-                    if (diffInZ < 0) incremeneter = -1.0f;
+                    float xIncrement = 1.0f;
+                    float zIncrement = 1.0f;
 
-                    for (int i = 0; i < absZ; i++)
+                    if (diffInX < 0) xIncrement = -1.0f; 
+                    if (diffInZ < 0) zIncrement = -1.0f;
+
+                    for (int i = 0; i < absX; i++)
                     {
-                        BuildObject(_dragStartPositon);
+                        for (int j = 0; j < absZ; j++)
+                        {
+                            BuildObject(_dragStartPositon);
 
-                        _dragStartPositon.z += incremeneter;
+                            _dragStartPositon.z += zIncrement;
+                        }
+
+                        _dragStartPositon.x += xIncrement;
                     }
                 }
+
+
 
                 BuildObject(_dragStartPositon);
             }

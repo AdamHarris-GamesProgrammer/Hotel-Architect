@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: Large Sofa
   m_EditorClassIdentifier: 
   _sizeInMetres: {x: 3, y: 1, z: 1}
+  _canRotate: 1
+  _canDrag: 0
+  _biDirectionalDrag: 0
