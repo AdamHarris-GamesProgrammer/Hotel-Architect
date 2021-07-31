@@ -177,6 +177,8 @@ public class ObjectPlacer : MonoBehaviour
                     if (diffInX > 0.0f) xScale = Mathf.Max(diffInX, 1.0f);
                     else xScale = Mathf.Min(diffInX, -1.0f);
 
+                    xScale = Mathf.Floor(xScale);
+
                     _placerPreview.transform.localScale = new Vector3(xScale, scale.y, scale.z);
                 }
                 //Dragging along Z
@@ -190,6 +192,8 @@ public class ObjectPlacer : MonoBehaviour
                     float zScale;
                     if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
                     else zScale = Mathf.Min(diffInZ, -1.0f);
+
+                    zScale = Mathf.Floor(zScale);
 
                     _placerPreview.transform.localScale = new Vector3(scale.x, scale.y, zScale);
                 }
@@ -213,6 +217,9 @@ public class ObjectPlacer : MonoBehaviour
                 float zScale;
                 if (diffInZ > 0.0f) zScale = Mathf.Max(diffInZ, 1.0f);
                 else zScale = Mathf.Min(diffInZ, -1.0f);
+
+                xScale = Mathf.Floor(xScale);
+                zScale = Mathf.Floor(zScale);
 
                 _placerPreview.transform.localScale = new Vector3(xScale, scale.y, zScale);
             }
@@ -301,6 +308,7 @@ public class ObjectPlacer : MonoBehaviour
                             _dragStartPositon.z += incremeneter;
                         }
                     }
+                    BuildObject(_dragStartPositon);
                 }
                 else
                 {
@@ -344,10 +352,6 @@ public class ObjectPlacer : MonoBehaviour
                         }
                     }
                 }
-
-
-
-                BuildObject(_dragStartPositon);
             }
         }
     }
@@ -444,8 +448,8 @@ public class ObjectPlacer : MonoBehaviour
         float flooredVal = Mathf.Floor(inVal);
         float newVal = inVal - flooredVal;
 
-        if (newVal > 0.75f) newVal = 1.0f;
-        else if (newVal > 0.25f) newVal = 0.5f;
+        if (newVal > 0.66f) newVal = 1.0f;
+        else if (newVal > 0.33f) newVal = 0.5f;
         else newVal = 0.0f;
 
         newVal += flooredVal;
