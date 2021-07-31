@@ -34,14 +34,18 @@ public class ObjectPlacer : MonoBehaviour
     bool _isRotatated = false;
     bool _canBuild = false;
 
-    bool _dragging = false;
-
     NodeGrid _nodeGrid;
 
     Vector3 _dragStartPositon;
 
+    Vector3 _buildPoint;
+
+
     Ray _rayFromCamera;
 
+    bool _dragging = false;
+
+    int _framesForHold = 0;
 
     void Awake()
     {
@@ -66,7 +70,17 @@ public class ObjectPlacer : MonoBehaviour
 
         SnapPreviewToGrid();
 
-        InteractWithMouse();
+        _buildPoint = _currentPoint;
+        _buildPoint.y += _placeObject._config._sizeInMetres.y / 2.0f;
+
+        MouseContinuous();
+
+        //if (_dragTest) DragPreview();
+    }
+
+    private void FixedUpdate()
+    {
+        MouseFixed();
     }
 
     private void InteractWithKeyboard()
@@ -264,6 +278,56 @@ public class ObjectPlacer : MonoBehaviour
         }
     }
 
+
+    void MouseContinuous()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log("Click");
+
+            BuildObject(_buildPoint);
+
+            _framesForHold = 0;
+
+            _dragStartPositon = _buildPoint;
+        }
+
+        //if the RMB is clicked
+        if (Input.GetMouseButtonDown(1)) RMBLogic();
+    }
+
+    void MouseFixed()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            _framesForHold++;
+
+            if (_framesForHold > 5)
+            {
+                if (_dragging)
+                    DragPreview();
+                else
+                {
+                    Debug.Log("Begin Hold");
+                    _dragStartPositon = _buildPoint;
+                    _dragging = true;
+                }
+            }
+        }
+        else
+        {
+            if (_dragging)
+            {
+                Debug.Log("End Hold");
+
+                DragBuild();
+
+                _dragging = false;
+            }
+            _framesForHold = 0;
+        }
+    }
+
     private void InteractWithMouse()
     {
         //Gets the build point, this is needed as some objects have offsets to them
@@ -285,8 +349,6 @@ public class ObjectPlacer : MonoBehaviour
         //we can build if there is no collision
         _canBuild = !Physics.CheckBox(buildPoint, extents);
 
-        if (_dragging) DragPreview();
-
         if (!_canBuild)
         {
             _meshRenderer.material = _invalidPlacement;
@@ -296,24 +358,16 @@ public class ObjectPlacer : MonoBehaviour
         //Sets the material of the placer preview
         _meshRenderer.material = _validPlacement;
 
+
         //If we LMB click 
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (!_placeObject._config._canDrag)
-            {
-                BuildObject(buildPoint);
-                return;
-            }
+        //if (Input.GetMouseButtonDown(0))
+        //{
+        //    _dragging = !_dragging;
 
-            _dragging = !_dragging;
-
-            if (_dragging) _dragStartPositon = buildPoint;
-            //Handle placement logic
-            else DragBuild();
-        }
-
-        //if the RMB is clicked
-        if (Input.GetMouseButtonDown(1)) RMBLogic();
+        //    if (_dragging) _dragStartPositon = buildPoint;
+        //    //Handle placement logic
+        //    else DragBuild();
+        //}
     }
 
     float RoundToRange(float inVal)
