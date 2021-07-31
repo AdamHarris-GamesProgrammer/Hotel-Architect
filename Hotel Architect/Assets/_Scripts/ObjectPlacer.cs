@@ -272,7 +272,8 @@ public class ObjectPlacer : MonoBehaviour
                 float absX = Mathf.Abs(diffInX);
                 float absZ = Mathf.Abs(diffInZ);
 
-                
+
+                Debug.Log(absX + " x " + absZ);
 
                 if (!_placeObject._config._biDirectionalDrag)
                 {
@@ -306,12 +307,11 @@ public class ObjectPlacer : MonoBehaviour
                     float xIncrement = 1.0f;
                     float zIncrement = 1.0f;
 
-                    if (diffInX < 0) xIncrement = -1.0f; 
+                    if (diffInX < 0) xIncrement = -1.0f;
                     if (diffInZ < 0) zIncrement = -1.0f;
 
-                    float originalZ = _dragStartPositon.z;
 
-                    for (int i = 0; i < absX; i++)
+                    if (absX <= 1)
                     {
                         for (int j = 0; j < absZ; j++)
                         {
@@ -319,9 +319,33 @@ public class ObjectPlacer : MonoBehaviour
 
                             _dragStartPositon.z += zIncrement;
                         }
+                    }
+                    else if (absZ <= 1)
+                    {
+                        for (int j = 0; j < absX; j++)
+                        {
+                            BuildObject(_dragStartPositon);
+                            Debug.Log("Building Object at: " + _dragStartPositon);
 
-                        _dragStartPositon.z = originalZ;
-                        _dragStartPositon.x += xIncrement;
+                            _dragStartPositon.x += xIncrement;
+                        }
+                    }
+                    else
+                    {
+                        float originalZ = _dragStartPositon.z;
+
+                        for (int i = 0; i < absX; i++)
+                        {
+                            for (int j = 0; j < absZ; j++)
+                            {
+                                BuildObject(_dragStartPositon);
+
+                                _dragStartPositon.z += zIncrement;
+                            }
+
+                            _dragStartPositon.z = originalZ;
+                            _dragStartPositon.x += xIncrement;
+                        }
                     }
                 }
 
